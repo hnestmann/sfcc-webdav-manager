@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SFCC WebDAV Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <i class="fas fa-cloud header-icon"></i>
+                <h1>SFCC WebDAV Manager</h1>
+            </div>
+            <div class="header-right">
+                <button id="switchConnectionBtn" class="secondary-btn" title="Switch Connection">
+                    <i class="fas fa-exchange-alt"></i>
+                    Switch Connection
+                </button>
+                <button id="settingsBtn" class="icon-btn" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button id="connectBtn" class="primary-btn hidden">
+                    <i class="fas fa-plug"></i>
+                    Connect
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div id="left-panel">
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                    <div class="sidebar-section">
+                        <h3>SFCC Folders</h3>
+                        <div class="sfcc-folders">
+                            <div class="folder-item" data-path="/cartridges">
+                                <i class="fas fa-code folder-icon"></i>
+                                <span>Cartridges</span>
+                            </div>
+                            <div class="folder-item" data-path="/impex">
+                                <i class="fas fa-exchange-alt folder-icon"></i>
+                                <span>Import/Export</span>
+                            </div>
+                            <div class="folder-item" data-path="/catalogs">
+                                <i class="fas fa-database folder-icon"></i>
+                                <span>Catalogs</span>
+                            </div>
+                            <div class="folder-item" data-path="/logs">
+                                <i class="fas fa-file-alt folder-icon"></i>
+                                <span>Logs</span>
+                            </div>
+                            <div class="folder-item" data-path="/static">
+                                <i class="fas fa-image folder-icon"></i>
+                                <span>Static</span>
+                            </div>
+                            <div class="folder-item" data-path="/libraries">
+                                <i class="fas fa-book folder-icon"></i>
+                                <span>Libraries</span>
+                            </div>
+                            <div class="folder-item" data-path="/temp">
+                                <i class="fas fa-clock folder-icon"></i>
+                                <span>Temp</span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- File Browser -->
+                <section class="file-browser">
+                    <div class="browser-header">
+                        <div class="breadcrumb">
+                            <button id="backBtn" class="icon-btn" title="Back" disabled>
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <div id="pathBreadcrumb" class="breadcrumb-path">
+                                <span class="path-segment root">Root</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="browser-toolbar">
+                        <div class="browser-actions">
+                            <button id="refreshBtn" class="icon-btn" title="Refresh">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button id="createFolderBtn" class="icon-btn" title="Create Folder">
+                                <i class="fas fa-folder-plus"></i>
+                            </button>
+                            <button id="uploadBtn" class="icon-btn" title="Upload File">
+                                <i class="fas fa-upload"></i>
+                            </button>
+                            <button id="downloadSelectedBtn" class="icon-btn hidden" title="Download Selected Files">
+                                <i class="fas fa-download"></i>
+                                <span class="selection-count"></span>
+                            </button>
+
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchInput" placeholder="Search files... (use * for wildcards)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="file-list-container">
+                        <div id="loadingIndicator" class="loading hidden">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Loading...</span>
+                        </div>
+                        
+                        <div id="notConnected" class="empty-state">
+                            <i class="fas fa-cloud-download-alt"></i>
+                            <h3>Not Connected</h3>
+                            <p>Connect to a WebDAV server to browse files</p>
+                        </div>
+
+                        <table id="fileTable" class="file-table hidden">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Size</th>
+                                    <th>Modified</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fileTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+            <div class="resizer" id="resizer"></div>
+            <div class="panel-divider">
+                <button id="copyToLocalBtn" class="copy-btn" title="Copy selected files to local folder" disabled>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <button id="copyToRemoteBtn" class="copy-btn" title="Copy selected files to remote server" disabled>
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+            <div id="right-panel">
+                <section class="file-browser local-browser">
+                    <div class="browser-header">
+                        <div class="breadcrumb">
+                            <button id="localBackBtn" class="icon-btn" title="Back" disabled>
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <div id="localPathBreadcrumb" class="breadcrumb-path">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="browser-toolbar">
+                        <div class="browser-actions">
+                            <button id="go-to-home-folder" class="icon-btn" title="Home folder">
+                                <i class="fas fa-home"></i>
+                            </button>
+                            <button id="localRefreshBtn" class="icon-btn" title="Refresh">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button id="showHiddenFiles" class="icon-btn toggle-btn" title="Show/Hide hidden files">
+                                <i class="fas fa-eye-slash"></i>
+                            </button>
+
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="localSearchInput" placeholder="Search files... (use * for wildcards)">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="file-list-container">
+                        <table id="localFileTable" class="file-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Size</th>
+                                    <th>Modified</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="localFileTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Status Bar -->
+        <footer class="status-bar">
+            <div class="status-left">
+                <span id="connectionStatus" class="status-disconnected">
+                    <i class="fas fa-circle"></i>
+                    Disconnected
+                </span>
+            </div>
+            <div class="status-center">
+                <span id="remoteFileCount" class="file-count-section">
+                    <i class="fas fa-cloud"></i>
+                    Remote: 0 items
+                </span>
+                <span class="status-divider">|</span>
+                <span id="localFileCount" class="file-count-section">
+                    <i class="fas fa-folder"></i>
+                    Local: 0 items
+                </span>
+            </div>
+            <div class="status-right">
+                <!-- Reserved for future use -->
+            </div>
+        </footer>
+    </div>
+
+    <!-- Connection Modal -->
+    <div id="connectionModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>WebDAV Connection</h2>
+                <button class="modal-close" data-modal="connectionModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="connectionForm" class="modal-body">
+                <div class="form-group">
+                    <label for="connectionName">Connection Name</label>
+                    <input type="text" id="connectionName" name="connectionName" placeholder="My SFCC Instance" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="webdavUrl">WebDAV URL</label>
+                    <input type="url" id="webdavUrl" name="webdavUrl" placeholder="https://your-instance.demandware.net/on/demandware.servlet/webdav/Sites/Impex" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="authType">Authentication Type:</label>
+                    <select id="authType" name="authType" required>
+                        <option value="basic">Username & Password</option>
+                        <option value="bearer">Bearer Token</option>
+                        <option value="oauth2">OAuth2 Client Credentials</option>
+                    </select>
+                </div>
+
+                <div id="basicAuthFields" class="auth-fields">
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" placeholder="your-username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" placeholder="your-password">
+                    </div>
+                </div>
+
+                <div id="bearerAuthFields" class="auth-fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="bearerToken">Bearer Token:</label>
+                        <input type="password" id="bearerToken" name="bearerToken" placeholder="your-bearer-token">
+                    </div>
+                </div>
+
+                <div id="oauth2AuthFields" class="auth-fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="clientId">Client ID:</label>
+                        <input type="text" id="clientId" name="clientId" placeholder="your-client-id">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientSecret">Client Secret:</label>
+                        <input type="password" id="clientSecret" name="clientSecret" placeholder="your-client-secret">
+                    </div>
+                    <div class="form-help">
+                        <small>OAuth2 Client Credentials will automatically obtain and refresh access tokens from account.demandware.com</small>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" id="testConnectionBtn" class="secondary-btn">
+                        <i class="fas fa-plug"></i>
+                        Test Connection
+                    </button>
+                    <button type="submit" class="primary-btn">
+                        <i class="fas fa-save"></i>
+                        Save Connection
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Folder Modal -->
+    <div id="createFolderModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Folder</h2>
+                <button class="modal-close" data-modal="createFolderModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="createFolderForm" class="modal-body">
+                <div class="form-group">
+                    <label for="folderName">Folder Name</label>
+                    <input type="text" id="folderName" placeholder="Enter folder name" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="secondary-btn" data-modal="createFolderModal">Cancel</button>
+                    <button type="submit" class="primary-btn">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Custom ID Modal -->
+    <div id="addCustomIdModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Catalog or Library</h3>
+                <button class="modal-close" data-modal="addCustomIdModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="addCustomIdForm" class="modal-body">
+                <div class="form-group">
+                    <label for="customIdValue" id="customIdLabel">Catalog ID</label>
+                    <input type="text" id="customIdValue" placeholder="Enter catalog ID" required>
+                    <small class="form-help" id="customIdHelp">Example: your-catalog-id</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="secondary-btn modal-close" data-modal="addCustomIdModal">Cancel</button>
+                    <button type="submit" class="primary-btn" id="addCustomIdSubmit">Test & Add Catalog</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notifications" class="notifications"></div>
+
+    <!-- Connection Selector Modal -->
+    <div id="connectionSelectorModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Select Connection</h2>
+                <div class="modal-subtitle">Choose a connection to get started</div>
+            </div>
+            <div class="modal-body">
+                <div id="connectionSelectorList" class="connection-selector-list">
+                    <!-- Connections will be populated here -->
+                </div>
+                <div class="connection-actions">
+                    <button id="addNewConnectionBtn" class="secondary-btn">
+                        <i class="fas fa-plus"></i>
+                        Add New Connection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 
