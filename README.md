@@ -2,6 +2,9 @@
 
 A modern Electron-based file manager specifically designed for Salesforce B2C Commerce (SFCC) WebDAV servers. This application provides secure credential management, intuitive file operations, and pre-configured SFCC folder structures.
 
+## Disclaimer
+Despite this paragraph this application was completely AI built. Use at your own risk and dont try to generate a bearer token in Account manager
+
 ## Features
 
 ### 🔐 Secure Authentication
